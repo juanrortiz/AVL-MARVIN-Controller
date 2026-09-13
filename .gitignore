@@ -1,0 +1,30 @@
+# Build output
+build/
+
+# Caches
+.cache/
+
+# OS / file manager metadata
+.directory
+.DS_Store
+Thumbs.db
+
+# Editor temporary files
+*.swp
+*.swo
+*~
+
+# Compiled artifacts
+*.o
+*.a
+*.elf
+*.bin
+*.hex
+*.map
+
+# Logs
+*.log
+
+# KiCad lock / temporary files
+*.lck
+~*
