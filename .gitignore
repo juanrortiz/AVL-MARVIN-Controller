@@ -28,3 +28,4 @@ Thumbs.db
 # KiCad lock / temporary files
 *.lck
 ~*
+hardware/controller/controller_ckt/.history/
