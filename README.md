@@ -1,137 +1,89 @@
-# Template STM32 Project
+# MARVIN Embedded Controller — Electronics Hardware Design
 
-Bare-metal STM32 project template — CMSIS registers, no HAL, Makefile-based build.
+**CPP AVL | Fall Cohort 2026 | Intelligent Ground Vehicle Competition (IGVC)**
 
-## Project structure
+This repository contains the hardware design files and embedded firmware source for a custom controller developed for **MARVIN**, the CPP Autonomous Vehicle Lab (AVL) competition platform.
 
-```
-.
-├── build/              # compile_commands.json, main.elf, main.bin (generated)
-├── config/
-│   └── recover.cfg     # OpenOCD recovery config
-├── include/             # CMSIS headers (see "CMSIS setup" below)
-├── linker.ld            # Flash/RAM memory map
-├── makefile
-└── src/
-    ├── app/
-    │   └── main.c
-    └── startup/
-        ├── startup_stm32fXXXxx.s
-        └── system_stm32fXxx.c
-```
+The controller is built around the **STM32F767ZIT6** microcontroller and is intended to modernize MARVIN's motor-control electronics, replacing the existing **Teensy 4.1**-based controller with an STM32-based system.
 
-## Toolchain
+## Project Goals
 
-```bash
-sudo pacman -S arm-none-eabi-gcc arm-none-eabi-binutils arm-none-eabi-newlib arm-none-eabi-gdb
-sudo pacman -S openocd stlink
-sudo pacman -S picocom bear
-```
+During the Fall 2026 cohort, the Electronics Hardware Design Team aims to:
 
-## CMSIS setup
+- Design and integrate a new STM32-based embedded control system for MARVIN.
+- Migrate CAN-based motor control from the existing Teensy 4.1 controller.
+- Support the currently used **SPARK MAX** motor drivers over CAN.
+- Improve compatibility with future **ODrive S Series** CAN motor drivers.
+- Standardize the control hardware around an industry-common STM32 platform.
+- Validate reliable communication, power monitoring, and operation on the vehicle.
 
-CMSIS headers aren't packaged — clone and copy them into `include/` on a new project:
+## Hardware Overview
 
-```bash
-git clone https://github.com/STMicroelectronics/cmsis-device-f4.git
-git clone https://github.com/ARM-software/CMSIS_5.git
+The custom controller integrates the following components and subsystems:
 
-cp cmsis-device-f4/Include/*.h include/
-cp CMSIS_5/CMSIS/Core/Include/core_cm4.h include/
-cp CMSIS_5/CMSIS/Core/Include/cmsis_gcc.h include/
-cp CMSIS_5/CMSIS/Core/Include/cmsis_version.h include/
-cp CMSIS_5/CMSIS/Core/Include/mpu_armv7.h include/
+| Subsystem | Description |
+| --- | --- |
+| Main MCU | STM32F767ZIT6 |
+| CAN Interface | CAN transceiver for communication with motor drivers |
+| USB / Serial | Serial-to-USB interface for communication and debugging |
+| Power Monitoring | Onboard power-monitoring circuitry |
+| PCB Design | KiCad schematic and PCB layout files |
 
-cp cmsis-device-f4/Source/Templates/system_stm32f4xx.c src/startup/
-cp cmsis-device-f4/Source/Templates/gcc/startup_stm32fXXXxx.s src/startup/
-```
+> **Note:** Electrical specifications, connector pinouts, CAN configuration, and power limits should be verified against the latest KiCad design before hardware is assembled or connected.
 
-Swap `cmsis-device-f4` for the matching family repo if targeting a different STM32 line.
+## Repository Contents
 
-## Makefile — per-project settings
+This repository includes:
 
-Update these when starting a new project from this template:
+- **KiCad project files** — schematics, PCB layouts, and related hardware design assets.
+- **Firmware source code** — embedded application code targeting the STM32F767ZIT6.
+- **Makefile** — firmware build configuration.
+- **Linker scripts** — memory layout and linking configuration for the STM32 target.
 
-- `-DSTM32FXXXxx` — target MCU define (must match the CMSIS header)
-- `-mcpu=` — core type (e.g. `cortex-m4`)
-- `linker.ld` — flash/RAM size and origin for the target chip
-- `SRCS` — source file list
-- `STARTUP` — path to the matching startup `.s` file
+The exact directory layout may evolve as the project develops.
 
-## Build & flash
+## Firmware Dependencies
 
-```bash
-make clean && bear --output build/compile_commands.json -- make
-make flash
-```
+The firmware depends on official **STMicroelectronics STM32 HAL and CMSIS libraries**. These libraries are **not necessarily bundled with this repository** and must be obtained separately from the official STM32 software packages.
 
-## Debug
+Recommended sources:
 
-```bash
-openocd -f config/recover.cfg
-arm-none-eabi-gdb build/main.elf
-(gdb) target remote :3333
-(gdb) monitor reset halt
-(gdb) load
-(gdb) continue
-```
+- [STM32CubeF7 firmware package](https://github.com/STMicroelectronics/STM32CubeF7)
+- [STM32F7 HAL drivers](https://github.com/STMicroelectronics/stm32f7xx-hal-driver)
+- [STM32Cube ecosystem](https://www.st.com/en/embedded-software/stm32cube-mcu-mpu-packages.html)
 
-## Serial monitor
+Ensure the HAL, CMSIS, startup files, include paths, and linker configuration match the **STM32F767ZIT6** and the project's Makefile. Dependency setup and build commands will be documented as the firmware structure is finalized.
 
-```bash
-picocom -b 115200 --flow n /dev/ttyACM0     # adjust port as needed
-```
+## Development Roadmap
 
-## Recovery
+- [ ] Finalize and review the KiCad schematic and PCB design.
+- [ ] Assemble and bring up the STM32F767ZIT6 controller hardware.
+- [ ] Configure the clock tree, GPIO, CAN, serial/USB, and power-monitoring peripherals.
+- [ ] Integrate official STM32 HAL/CMSIS dependencies into the firmware build.
+- [ ] Implement and validate CAN communication with SPARK MAX motor drivers.
+- [ ] Migrate motor-control functionality from Teensy 4.1 to STM32.
+- [ ] Evaluate and implement compatibility with ODrive S Series CAN motor drivers.
+- [ ] Perform bench testing, vehicle integration, and system validation.
 
-If `config/recover.cfg` is missing, recreate it with:
+*Checklist items represent project objectives, not confirmed implementation status.*
 
-```bash
-echo 'source [find interface/stlink.cfg]
-source [find target/stm32f4x.cfg]
-reset_config srst_only srst_nogate
-adapter speed 480' > config/recover.cfg
-```
+## Development and Testing Notes
 
-Mass erase (use if the board is unresponsive / bad flash state):
+Before connecting motor drivers or installing the controller on MARVIN:
 
-```bash
-openocd -f config/recover.cfg -c "init; reset halt; stm32f4x mass_erase 0; exit"
-```
+1. Verify PCB power rails, grounding, and connector pinouts.
+2. Confirm CAN bus voltage levels, termination, bitrate, and device-specific message protocols.
+3. Test communication and power monitoring on the bench before enabling motor outputs.
+4. Validate fault handling and emergency-stop behavior as part of vehicle integration.
 
-Once complete, reflash normally:
+**Important:** SPARK MAX and ODrive motor controllers may use different CAN protocols. Electrical CAN compatibility alone does not guarantee firmware-level interoperability; each device requires the appropriate protocol implementation.
 
-```bash
-make flash
-```
+## Team
 
-## Git push
+**CPP Autonomous Vehicle Lab (AVL)**  
+**Fall Cohort 2026 — MARVIN Electronics Hardware Design Team**  
+**Competition:** Intelligent Ground Vehicle Competition (IGVC)
 
-### Authenticate GitHub
+## Project Status
 
-```bash
-sudo pacman -S github-cli
-gh auth login
-```
-
-### Create the repo on GitHub, then init your local folder
-
-```bash
-git init
-git remote add origin https://github.com/USERNAME/REPO-NAME.git
-```
-
-```bash
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git push -u origin main
-```
-
-### Note
-
-`git remote set-url` only works on an existing remote — use `git remote add` for a fresh repo.
-
-```bash
-git remote set-url origin https://github.com/USERNAME/REPO-NAME.git
-```
+**In development — Fall 2026 cohort.** Hardware, firmware, and integration details are subject to change as the controller is developed and validated.

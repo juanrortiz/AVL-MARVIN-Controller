@@ -1,13 +1,13 @@
-/* STM32F446RE memory map - from reference manual */
+/* STM32F767 memory map - from reference manual */
 ENTRY(Reset_Handler)
 
 MEMORY
 {
-    /* 512KB of flash starting at 0x08000000 */
-    FLASH (rx)  : ORIGIN = 0x08000000, LENGTH = 512K
+    /* 2MB of flash starting at 0x08000000 */
+    FLASH (rx)  : ORIGIN = 0x08000000, LENGTH = 2048K
 
-    /* 128KB of RAM starting at 0x20000000 */
-    RAM (rwx)   : ORIGIN = 0x20000000, LENGTH = 128K
+    /* 512KB of RAM starting at 0x20000000 */
+    RAM (rwx)   : ORIGIN = 0x20000000, LENGTH = 512K
 }
 
 SECTIONS
@@ -40,6 +40,8 @@ SECTIONS
         *(COMMON)
         _ebss = .;              /* end of bss */
     } > RAM
+
+    PROVIDE(end = .);
 
     /* stack grows downward from end of RAM */
     _estack = ORIGIN(RAM) + LENGTH(RAM);

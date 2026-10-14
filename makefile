@@ -1,17 +1,51 @@
-MCU      = cortex-m4
+MCU      = cortex-m7
 CC       = arm-none-eabi-gcc
 OBJCOPY  = arm-none-eabi-objcopy
-AS       = arm-none-eabi-as
 
-CFLAGS = -mcpu=$(MCU) -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard \
-         -Os -Wall -nostdlib -g \
-         -DSTM32F446xx \
-         -Iinclude
+STM32_DIR    = $(HOME)/Embedded/cmsis-device-f7
+CMSIS_DIR    = $(HOME)/Embedded/CMSIS_6/CMSIS
+HAL_DIR      = $(HOME)/Embedded/stm32f7xx-hal-driver
 
-LDFLAGS = -T linker.ld -lc -lgcc --specs=nosys.specs
+CFLAGS = \
+    -mcpu=$(MCU) \
+    -mthumb \
+    -mfpu=fpv5-d16 \
+    -mfloat-abi=hard \
+    -Os \
+    -Wall \
+    -g \
+    -ffunction-sections \
+    -fdata-sections \
+    -DSTM32F767xx \
+    -DCMSIS_device_header=\"stm32f767xx.h\" \
+    -Iinclude \
+    -I$(STM32_DIR)/Include \
+    -I$(CMSIS_DIR)/Core/Include \
+    -I$(HAL_DIR)/Inc
 
-SRCS = src/app/main.c src/app/init.c src/startup/system_stm32f4xx.c
-STARTUP  = src/startup/startup_stm32f446xx.s
+HAL_SRCS = \
+    $(HAL_DIR)/Src/stm32f7xx_hal.c \
+    $(HAL_DIR)/Src/stm32f7xx_hal_cortex.c \
+    $(HAL_DIR)/Src/stm32f7xx_hal_gpio.c \
+    $(HAL_DIR)/Src/stm32f7xx_hal_rcc.c \
+    $(HAL_DIR)/Src/stm32f7xx_hal_uart.c \
+    $(HAL_DIR)/Src/stm32f7xx_hal_can.c
+
+LDFLAGS = \
+    -T linker.ld \
+    --specs=nano.specs \
+    --specs=nosys.specs \
+    -Wl,--gc-sections \
+    -Wl,-Map=build/main.map
+
+SRCS = \
+	src/app/main.c \
+	src/app/init.c \
+	src/app/can_app.c \
+	src/startup/system_stm32f7xx.c \
+	$(HAL_SRCS)
+
+STARTUP = src/startup/startup_stm32f767xx.s
 
 all: build/main.bin
 

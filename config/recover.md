@@ -1,6 +1,6 @@
 # Recover command
 
-openocd -f recover.cfg -c "init; reset halt; stm32f4x mass_erase 0; exit"
+openocd -f recover.cfg -c "init; reset halt; stm32f7x mass_erase 0; exit"
 
 # In case recover.cfg goes missing
 
@@ -11,7 +11,7 @@ adapter speed 480' > recover.cfg
 
 # Mass erase command 
 
-openocd -f recover.cfg -c "init; reset halt; stm32f4x mass_erase 0; exit"
+openocd -f recover.cfg -c "init; reset halt; stm32f7x mass_erase 0; exit"
 
 # Once completed
 
